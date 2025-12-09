@@ -67,7 +67,10 @@ Complex data transformation function supporting:
 - Persistent filters across page reloads
 
 #### 5. UI/UX (8/8)
-- Responsive grid layout
+- **Apple-inspired design system**: SF Pro Display font, refined color palette (#1d1d1f, #86868b, #007aff)
+- **Subtle shadows**: Multi-layer shadows (0 2px 8px rgba) for depth
+- **Smooth interactions**: Cubic-bezier transitions, hover effects, button states
+- **Refined spacing**: 16px rounded corners, generous padding, clean typography
 - Loading state during debounce
 - Empty state with helpful message
 - Active filter count badge
@@ -94,7 +97,9 @@ Complex data transformation function supporting:
 ✅ React.memo to prevent unnecessary re-renders  
 ✅ CSV export functionality  
 ✅ Unit test cases (as comments)  
-✅ Smooth transitions on hover  
+✅ Apple-inspired design system with smooth animations
+✅ iOS-style button components with proper disabled states
+✅ Focus states with accent color highlights
 
 ---
 
@@ -181,10 +186,11 @@ Manual testing scenarios included as comments:
 ## 🔄 Trade-offs
 
 1. **No lodash**: Used native JS methods for better bundle size
-2. **Inline styles**: Quick implementation; production would use CSS modules
-3. **Virtual scrolling**: Implemented pagination instead (simpler, sufficient for 5 items)
-4. **Animation library**: CSS transitions instead of Framer Motion
+2. **Hybrid styling**: Inline styles for dynamic values, `<style>` block for reusable classes (production would use CSS modules/Tailwind)
+3. **Virtual scrolling**: Implemented pagination instead (simpler, sufficient for dataset size)
+4. **Animation library**: CSS transitions with cubic-bezier instead of Framer Motion (lighter bundle)
 5. **Testing**: Commented test cases instead of full Jest setup (time constraint)
+6. **Design polish**: Added Apple-inspired UI post-implementation for professional presentation
 
 ---
 
@@ -193,7 +199,8 @@ Manual testing scenarios included as comments:
 - Part 1 (JavaScript): ~12 minutes
 - Part 2 (React + TypeScript): ~28 minutes
 - Bug fixes & polish: ~5 minutes
-- **Total**: ~45 minutes
+- Design system upgrade: ~10 minutes (Apple-inspired aesthetic)
+- **Total**: ~55 minutes (45 min core + design polish)
 
 ---
 
