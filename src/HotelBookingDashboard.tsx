@@ -124,6 +124,45 @@ export default function HotelBookingDashboard() {
     []
   );
 
+  // Helper: Parse partial date and return range
+  const parsePartialDate = useCallback((dateStr: string): { start: Date; end: Date } | null => {
+    if (!dateStr) return null;
+    
+    const parts = dateStr.split('-');
+    const year = parts[0] ? parseInt(parts[0]) : null;
+    const month = parts[1] ? parseInt(parts[1]) : null;
+    const day = parts[2] ? parseInt(parts[2]) : null;
+    
+    if (!year || year < 1900) return null;
+    
+    if (day && month) {
+      // Full date: YYYY-MM-DD
+      const date = new Date(year, month - 1, day);
+      return { start: date, end: date };
+    } else if (month) {
+      // Year + Month: YYYY-MM
+      const lastDay = new Date(year, month, 0).getDate();
+      return {
+        start: new Date(year, month - 1, 1),
+        end: new Date(year, month - 1, lastDay, 23, 59, 59)
+      };
+    } else {
+      // Year only: YYYY
+      return {
+        start: new Date(year, 0, 1),
+        end: new Date(year, 11, 31, 23, 59, 59)
+      };
+    }
+  }, []);
+
+  // Helper: Check if date ranges overlap
+  const rangesOverlap = useCallback((
+    range1: { start: Date; end: Date },
+    range2: { start: Date; end: Date }
+  ): boolean => {
+    return range1.start <= range2.end && range1.end >= range2.start;
+  }, []);
+
   // Filter and sort hotels (memoized)
   const filteredHotels = useMemo(() => {
     let results = HOTELS.filter(hotel => {
@@ -141,28 +180,35 @@ export default function HotelBookingDashboard() {
       // Min rating
       if (hotel.rating < filters.minRating) return false;
 
-      // Date range availability
-      const hotelCheckIn = new Date(hotel.availability.checkIn);
-      const hotelCheckOut = new Date(hotel.availability.checkOut);
+      // Date range availability (with partial date support)
+      const hotelRange = {
+        start: new Date(hotel.availability.checkIn),
+        end: new Date(hotel.availability.checkOut)
+      };
       
       if (filters.dateRange.checkIn) {
-        const reqCheckIn = new Date(filters.dateRange.checkIn);
+        const checkInRange = parsePartialDate(filters.dateRange.checkIn);
+        if (!checkInRange) return false;
         
-        // Validate date range if both dates provided
         if (filters.dateRange.checkOut) {
-          const reqCheckOut = new Date(filters.dateRange.checkOut);
-          if (reqCheckIn >= reqCheckOut) return false; // Invalid range
+          const checkOutRange = parsePartialDate(filters.dateRange.checkOut);
+          if (!checkOutRange) return false;
           
-          // Check if requested dates fall within hotel availability
-          if (reqCheckIn < hotelCheckIn || reqCheckOut > hotelCheckOut) return false;
+          // Validate: check-in must be before check-out
+          if (checkInRange.start >= checkOutRange.end) return false;
+          
+          // Check if requested range overlaps with hotel availability
+          const requestedRange = { start: checkInRange.start, end: checkOutRange.end };
+          if (!rangesOverlap(requestedRange, hotelRange)) return false;
         } else {
-          // Only check-in provided: ensure it's within hotel availability
-          if (reqCheckIn < hotelCheckIn || reqCheckIn > hotelCheckOut) return false;
+          // Only check-in: ensure it overlaps with hotel availability
+          if (!rangesOverlap(checkInRange, hotelRange)) return false;
         }
       } else if (filters.dateRange.checkOut) {
-        // Only check-out provided: ensure it's within hotel availability
-        const reqCheckOut = new Date(filters.dateRange.checkOut);
-        if (reqCheckOut < hotelCheckIn || reqCheckOut > hotelCheckOut) return false;
+        // Only check-out: ensure it overlaps with hotel availability
+        const checkOutRange = parsePartialDate(filters.dateRange.checkOut);
+        if (!checkOutRange) return false;
+        if (!rangesOverlap(checkOutRange, hotelRange)) return false;
       }
 
       return true;
